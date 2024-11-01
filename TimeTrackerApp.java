@@ -19,10 +19,13 @@ public class TimeTrackerApp {
     private static JButton startButton;
     private static JButton pauseButton;
     private static JButton stopButton;
+    private static JTextField hoursField;
+    private static JTextField minutesField;
+    private static JTextField secondsField;
 
     public static void main(String[] args) {
         // Create frame
-        JFrame frame = new JFrame("LorPa TimeTrack");
+        JFrame frame = new JFrame("Time Tracking Tool");
         frame.setSize(600, 350);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setLayout(null);
@@ -41,15 +44,15 @@ public class TimeTrackerApp {
         timeLabel.setBounds(10, 40, 100, 25);
         frame.add(timeLabel);
 
-        JTextField hoursField = new JTextField("0");
+        hoursField = new JTextField("0");
         hoursField.setBounds(100, 40, 50, 25);
         frame.add(hoursField);
 
-        JTextField minutesField = new JTextField("45");
+        minutesField = new JTextField("45");
         minutesField.setBounds(160, 40, 50, 25);
         frame.add(minutesField);
 
-        JTextField secondsField = new JTextField("0");
+        secondsField = new JTextField("0");
         secondsField.setBounds(220, 40, 50, 25);
         frame.add(secondsField);
 
@@ -110,6 +113,11 @@ public class TimeTrackerApp {
 
                     remainingTime = timeInSeconds;
                     startTimer(taskName);
+
+                    // Disable time input fields
+                    hoursField.setEnabled(false);
+                    minutesField.setEnabled(false);
+                    secondsField.setEnabled(false);
                 } catch (NumberFormatException ex) {
                     JOptionPane.showMessageDialog(frame, "Please enter valid numbers for time.");
                 }
@@ -130,7 +138,7 @@ public class TimeTrackerApp {
                     timer.stop();
                     pauseButton.setText("Resume");
                     isPaused = true;
-                    statusLabel.setText("Timer paused at: " + remainingTime + " seconds");
+                    statusLabel.setText("Timer paused at: " + formatTime(remainingTime));
                 }
             }
         });
@@ -147,6 +155,11 @@ public class TimeTrackerApp {
                 startButton.setEnabled(true);
                 pauseButton.setEnabled(false);
                 stopButton.setEnabled(false);
+
+                // Re-enable time input fields
+                hoursField.setEnabled(true);
+                minutesField.setEnabled(true);
+                secondsField.setEnabled(true);
             }
         });
 
@@ -170,7 +183,7 @@ public class TimeTrackerApp {
             @Override
             public void actionPerformed(ActionEvent e) {
                 if (remainingTime > 0) {
-                    statusLabel.setText("Time left: " + remainingTime + " seconds");
+                    statusLabel.setText("Time left: " + formatTime(remainingTime));
                     remainingTime--;
                 } else {
                     timer.stop();
@@ -180,6 +193,11 @@ public class TimeTrackerApp {
                     startButton.setEnabled(true);
                     pauseButton.setEnabled(false);
                     stopButton.setEnabled(false);
+
+                    // Re-enable time input fields
+                    hoursField.setEnabled(true);
+                    minutesField.setEnabled(true);
+                    secondsField.setEnabled(true);
                 }
             }
         });
@@ -191,11 +209,25 @@ public class TimeTrackerApp {
         stopButton.setEnabled(true);
     }
 
+    private static String formatTime(int totalSeconds) {
+        int hours = totalSeconds / 3600;
+        int minutes = (totalSeconds % 3600) / 60;
+        int seconds = totalSeconds % 60;
+
+        if (hours > 0) {
+            return String.format("%d hours, %d minutes, %d seconds", hours, minutes, seconds);
+        } else if (minutes > 0) {
+            return String.format("%d minutes, %d seconds", minutes, seconds);
+        } else {
+            return String.format("%d seconds", seconds);
+        }
+    }
+
     private static void playSound() {
         try {
             Clip clip = AudioSystem.getClip();
             AudioInputStream inputStream = AudioSystem.getAudioInputStream(
-                TimeTrackerApp.class.getResource("/sound/alert.wav"));
+                TimeTrackerApp.class.getResource("sound.wav"));
             clip.open(inputStream);
             clip.start();
         } catch (Exception e) {
@@ -206,7 +238,8 @@ public class TimeTrackerApp {
     private static void saveTask(String taskName, int elapsedTime) {
         LocalDateTime now = LocalDateTime.now();
         DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");
-        String entry = dtf.format(now) + " - Task: " + taskName + " - Duration: " + elapsedTime + " seconds\n";
+        String formattedTime = formatTime(elapsedTime);
+        String entry = dtf.format(now) + " - Task: " + taskName + " - Duration: " + formattedTime + "\n";
 
         try (FileWriter writer = new FileWriter("time_tracking_log.txt", true)) {
             writer.write(entry);
