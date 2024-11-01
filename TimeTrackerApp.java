@@ -18,7 +18,7 @@ public class TimeTrackerApp {
     public static void main(String[] args) {
         // Create frame
         JFrame frame = new JFrame("Time Tracking Tool");
-        frame.setSize(500, 300);
+        frame.setSize(600, 300);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setLayout(null);
 
@@ -31,14 +31,22 @@ public class TimeTrackerApp {
         taskField.setBounds(100, 10, 200, 25);
         frame.add(taskField);
 
-        // Timer input (in seconds)
-        JLabel timeLabel = new JLabel("Time (sec):");
+        // Time input fields for hours, minutes, and seconds
+        JLabel timeLabel = new JLabel("Time (h:m:s):");
         timeLabel.setBounds(10, 40, 100, 25);
         frame.add(timeLabel);
 
-        JTextField timeField = new JTextField();
-        timeField.setBounds(100, 40, 200, 25);
-        frame.add(timeField);
+        JTextField hoursField = new JTextField("0");
+        hoursField.setBounds(100, 40, 50, 25);
+        frame.add(hoursField);
+
+        JTextField minutesField = new JTextField("45");
+        minutesField.setBounds(160, 40, 50, 25);
+        frame.add(minutesField);
+
+        JTextField secondsField = new JTextField("0");
+        secondsField.setBounds(220, 40, 50, 25);
+        frame.add(secondsField);
 
         // Start button
         JButton startButton = new JButton("Start Timer");
@@ -52,7 +60,7 @@ public class TimeTrackerApp {
 
         // Status label
         statusLabel = new JLabel("Status: Waiting to start");
-        statusLabel.setBounds(10, 100, 300, 25);
+        statusLabel.setBounds(10, 100, 400, 25);
         frame.add(statusLabel);
 
         // Action on start button click
@@ -60,18 +68,33 @@ public class TimeTrackerApp {
             @Override
             public void actionPerformed(ActionEvent e) {
                 String taskName = taskField.getText();
-                String timeText = timeField.getText();
-                if (taskName.isEmpty() || timeText.isEmpty()) {
-                    JOptionPane.showMessageDialog(frame, "Please enter both task and time.");
+                if (taskName.isEmpty()) {
+                    JOptionPane.showMessageDialog(frame, "Please enter a task name.");
                     return;
                 }
+
                 try {
-                    timeInSeconds = Integer.parseInt(timeText);
+                    int hours = Integer.parseInt(hoursField.getText());
+                    int minutes = Integer.parseInt(minutesField.getText());
+                    int seconds = Integer.parseInt(secondsField.getText());
+
+                    if (hours < 0 || minutes < 0 || minutes >= 60 || seconds < 0 || seconds >= 60) {
+                        JOptionPane.showMessageDialog(frame, "Please enter valid time values.");
+                        return;
+                    }
+
+                    // Convert total time to seconds
+                    timeInSeconds = (hours * 3600) + (minutes * 60) + seconds;
+
+                    if (timeInSeconds == 0) {
+                        JOptionPane.showMessageDialog(frame, "Total time cannot be zero.");
+                        return;
+                    }
+
+                    startTimer(taskName);
                 } catch (NumberFormatException ex) {
-                    JOptionPane.showMessageDialog(frame, "Please enter a valid number for time.");
-                    return;
+                    JOptionPane.showMessageDialog(frame, "Please enter valid numbers for time.");
                 }
-                startTimer(taskName);
             }
         });
 
