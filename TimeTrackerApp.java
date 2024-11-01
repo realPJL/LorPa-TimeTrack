@@ -14,11 +14,16 @@ public class TimeTrackerApp {
     private static JTextField taskField;
     private static JLabel statusLabel;
     private static int timeInSeconds;
+    private static int remainingTime;
+    private static boolean isPaused = false;
+    private static JButton startButton;
+    private static JButton pauseButton;
+    private static JButton stopButton;
 
     public static void main(String[] args) {
         // Create frame
-        JFrame frame = new JFrame("Time Tracking Tool");
-        frame.setSize(600, 300);
+        JFrame frame = new JFrame("LorPa TimeTrack");
+        frame.setSize(600, 350);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setLayout(null);
 
@@ -49,21 +54,33 @@ public class TimeTrackerApp {
         frame.add(secondsField);
 
         // Start button
-        JButton startButton = new JButton("Start Timer");
+        startButton = new JButton("Start Timer");
         startButton.setBounds(10, 70, 120, 25);
         frame.add(startButton);
 
+        // Pause button
+        pauseButton = new JButton("Pause");
+        pauseButton.setBounds(140, 70, 120, 25);
+        pauseButton.setEnabled(false);
+        frame.add(pauseButton);
+
+        // Stop button
+        stopButton = new JButton("Stop");
+        stopButton.setBounds(270, 70, 120, 25);
+        stopButton.setEnabled(false);
+        frame.add(stopButton);
+
         // View Data button
         JButton viewButton = new JButton("View Saved Data");
-        viewButton.setBounds(150, 70, 150, 25);
+        viewButton.setBounds(10, 110, 150, 25);
         frame.add(viewButton);
 
         // Status label
         statusLabel = new JLabel("Status: Waiting to start");
-        statusLabel.setBounds(10, 100, 400, 25);
+        statusLabel.setBounds(10, 150, 400, 25);
         frame.add(statusLabel);
 
-        // Action on start button click
+        // Start button action
         startButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -91,6 +108,7 @@ public class TimeTrackerApp {
                         return;
                     }
 
+                    remainingTime = timeInSeconds;
                     startTimer(taskName);
                 } catch (NumberFormatException ex) {
                     JOptionPane.showMessageDialog(frame, "Please enter valid numbers for time.");
@@ -98,7 +116,41 @@ public class TimeTrackerApp {
             }
         });
 
-        // Action on view button click
+        // Pause button action
+        pauseButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (isPaused) {
+                    // Resume the timer
+                    startTimer(taskField.getText());
+                    pauseButton.setText("Pause");
+                    isPaused = false;
+                } else {
+                    // Pause the timer
+                    timer.stop();
+                    pauseButton.setText("Resume");
+                    isPaused = true;
+                    statusLabel.setText("Timer paused at: " + remainingTime + " seconds");
+                }
+            }
+        });
+
+        // Stop button action
+        stopButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (timer != null) {
+                    timer.stop();
+                }
+                statusLabel.setText("Timer stopped.");
+                saveTask(taskField.getText(), timeInSeconds - remainingTime); // Save with elapsed time
+                startButton.setEnabled(true);
+                pauseButton.setEnabled(false);
+                stopButton.setEnabled(false);
+            }
+        });
+
+        // View button action
         viewButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -115,22 +167,28 @@ public class TimeTrackerApp {
         }
 
         timer = new Timer(1000, new ActionListener() {
-            int countdown = timeInSeconds;
-
             @Override
             public void actionPerformed(ActionEvent e) {
-                if (countdown > 0) {
-                    statusLabel.setText("Time left: " + countdown + " seconds");
-                    countdown--;
+                if (remainingTime > 0) {
+                    statusLabel.setText("Time left: " + remainingTime + " seconds");
+                    remainingTime--;
                 } else {
                     timer.stop();
                     statusLabel.setText("Time's up for task: " + taskName);
                     playSound();
-                    saveTask(taskName);
+                    saveTask(taskName, timeInSeconds); // Save full time if completed
+                    startButton.setEnabled(true);
+                    pauseButton.setEnabled(false);
+                    stopButton.setEnabled(false);
                 }
             }
         });
         timer.start();
+
+        // Update button states
+        startButton.setEnabled(false);
+        pauseButton.setEnabled(true);
+        stopButton.setEnabled(true);
     }
 
     private static void playSound() {
@@ -145,10 +203,10 @@ public class TimeTrackerApp {
         }
     }
 
-    private static void saveTask(String taskName) {
+    private static void saveTask(String taskName, int elapsedTime) {
         LocalDateTime now = LocalDateTime.now();
         DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");
-        String entry = dtf.format(now) + " - Task: " + taskName + " - Duration: " + timeInSeconds + " seconds\n";
+        String entry = dtf.format(now) + " - Task: " + taskName + " - Duration: " + elapsedTime + " seconds\n";
 
         try (FileWriter writer = new FileWriter("time_tracking_log.txt", true)) {
             writer.write(entry);
@@ -169,7 +227,7 @@ public class TimeTrackerApp {
             JTextArea textArea = new JTextArea(content.toString());
             textArea.setEditable(false);
             JScrollPane scrollPane = new JScrollPane(textArea);
-            scrollPane.setPreferredSize(new java.awt.Dimension(400, 200));
+            scrollPane.setPreferredSize(new java.awt.Dimension(600, 200));
             JOptionPane.showMessageDialog(null, scrollPane, "Saved Time Logs", JOptionPane.INFORMATION_MESSAGE);
         } catch (IOException ex) {
             JOptionPane.showMessageDialog(null, "No data found or unable to read the file.");
