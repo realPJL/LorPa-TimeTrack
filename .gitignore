@@ -1,0 +1,5 @@
+# Ignore all class files
+*.class
+
+# Ignore the save file
+time_tracking_log.txt
