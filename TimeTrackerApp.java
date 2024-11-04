@@ -1,4 +1,5 @@
 import javax.swing.*;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.BufferedReader;
@@ -26,62 +27,95 @@ public class TimeTrackerApp {
     public static void main(String[] args) {
         // Create frame
         JFrame frame = new JFrame("Time Tracking Tool");
-        frame.setSize(600, 350);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.setLayout(null);
+        frame.setSize(600, 400);
+        frame.setLayout(new BorderLayout(10, 10));
+
+        // Main panel with padding
+        JPanel mainPanel = new JPanel(new BorderLayout(10, 10));
+        mainPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        frame.add(mainPanel, BorderLayout.CENTER);
+
+        // Create input panel for task and time input
+        JPanel inputPanel = new JPanel(new GridBagLayout());
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(5, 5, 5, 5);
+        gbc.fill = GridBagConstraints.HORIZONTAL;
 
         // Task input
         JLabel taskLabel = new JLabel("Task:");
-        taskLabel.setBounds(10, 10, 100, 25);
-        frame.add(taskLabel);
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.weightx = 0.1;
+        inputPanel.add(taskLabel, gbc);
 
         taskField = new JTextField();
-        taskField.setBounds(100, 10, 200, 25);
-        frame.add(taskField);
+        gbc.gridx = 1;
+        gbc.gridy = 0;
+        gbc.gridwidth = 3;
+        gbc.weightx = 1.0;
+        inputPanel.add(taskField, gbc);
 
         // Time input fields for hours, minutes, and seconds
         JLabel timeLabel = new JLabel("Time (h:m:s):");
-        timeLabel.setBounds(10, 40, 100, 25);
-        frame.add(timeLabel);
+        gbc.gridx = 0;
+        gbc.gridy = 1;
+        gbc.gridwidth = 1;
+        gbc.weightx = 0.1;
+        inputPanel.add(timeLabel, gbc);
 
         hoursField = new JTextField("0");
-        hoursField.setBounds(100, 40, 50, 25);
-        frame.add(hoursField);
+        gbc.gridx = 1;
+        gbc.gridy = 1;
+        gbc.weightx = 0.3;
+        inputPanel.add(hoursField, gbc);
 
         minutesField = new JTextField("45");
-        minutesField.setBounds(160, 40, 50, 25);
-        frame.add(minutesField);
+        gbc.gridx = 2;
+        gbc.gridy = 1;
+        gbc.weightx = 0.3;
+        inputPanel.add(minutesField, gbc);
 
         secondsField = new JTextField("0");
-        secondsField.setBounds(220, 40, 50, 25);
-        frame.add(secondsField);
+        gbc.gridx = 3;
+        gbc.gridy = 1;
+        gbc.weightx = 0.3;
+        inputPanel.add(secondsField, gbc);
 
-        // Start button
+        // Add input panel to main panel
+        mainPanel.add(inputPanel, BorderLayout.NORTH);
+
+        // Create button panel
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         startButton = new JButton("Start Timer");
-        startButton.setBounds(10, 70, 120, 25);
-        frame.add(startButton);
+        buttonPanel.add(startButton);
 
-        // Pause button
         pauseButton = new JButton("Pause");
-        pauseButton.setBounds(140, 70, 120, 25);
         pauseButton.setEnabled(false);
-        frame.add(pauseButton);
+        buttonPanel.add(pauseButton);
 
-        // Stop button
         stopButton = new JButton("Stop");
-        stopButton.setBounds(270, 70, 120, 25);
         stopButton.setEnabled(false);
-        frame.add(stopButton);
+        buttonPanel.add(stopButton);
 
-        // View Data button
         JButton viewButton = new JButton("View Saved Data");
-        viewButton.setBounds(10, 110, 150, 25);
-        frame.add(viewButton);
+        buttonPanel.add(viewButton);
 
-        // Status label
+        // Add button panel to main panel
+        mainPanel.add(buttonPanel, BorderLayout.CENTER);
+
+        // Status label for the timer display
         statusLabel = new JLabel("Status: Waiting to start");
-        statusLabel.setBounds(10, 150, 400, 25);
-        frame.add(statusLabel);
+        statusLabel.setHorizontalAlignment(SwingConstants.CENTER);
+        statusLabel.setFont(new Font("Arial", Font.BOLD, 14));
+
+        // Panel for status label
+        JPanel statusPanel = new JPanel();
+        statusPanel.setLayout(new BorderLayout());
+        statusPanel.add(statusLabel, BorderLayout.CENTER);
+
+        // Add status panel under button panel
+        mainPanel.add(statusPanel, BorderLayout.SOUTH);
 
         // Start button action
         startButton.addActionListener(new ActionListener() {
@@ -260,7 +294,7 @@ public class TimeTrackerApp {
             JTextArea textArea = new JTextArea(content.toString());
             textArea.setEditable(false);
             JScrollPane scrollPane = new JScrollPane(textArea);
-            scrollPane.setPreferredSize(new java.awt.Dimension(600, 200));
+            scrollPane.setPreferredSize(new Dimension(600, 200));
             JOptionPane.showMessageDialog(null, scrollPane, "Saved Time Logs", JOptionPane.INFORMATION_MESSAGE);
         } catch (IOException ex) {
             JOptionPane.showMessageDialog(null, "No data found or unable to read the file.");
