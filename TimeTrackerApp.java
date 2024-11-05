@@ -8,6 +8,8 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
+import java.util.Map;
 import javax.sound.sampled.*;
 
 public class TimeTrackerApp {
@@ -100,6 +102,10 @@ public class TimeTrackerApp {
 
         JButton viewButton = new JButton("View Saved Data");
         buttonPanel.add(viewButton);
+
+        // Add button View Daily time spent
+        JButton dailyViewButton = new JButton("View Daily Time Spent");
+        buttonPanel.add(dailyViewButton);
 
         // Add button panel to main panel
         mainPanel.add(buttonPanel, BorderLayout.CENTER);
@@ -205,6 +211,14 @@ public class TimeTrackerApp {
             }
         });
 
+        // View Daily action
+        dailyViewButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                showDailyTimeTasks();
+            }
+        });
+
         frame.setVisible(true);
     }
 
@@ -299,5 +313,62 @@ public class TimeTrackerApp {
         } catch (IOException ex) {
             JOptionPane.showMessageDialog(null, "No data found or unable to read the file.");
         }
+    }
+
+    private static void showDailyTimeTasks() {
+        StringBuilder content = new StringBuilder();
+        Map<String, Integer> dailyTasks = new HashMap<>();
+        LocalDateTime now = LocalDateTime.now();
+        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy/MM/dd");
+
+        try (BufferedReader reader = new BufferedReader(new FileReader("time_tracking_log.txt"))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                String[] parts = line.split(" - ");
+                if (parts.length >= 3) {
+                    String datePart = parts[0];
+                    String taskPart = parts[1].replace("Task: ", "");
+                    String durationPart = parts[2].replace("Duration: ", "");
+
+                    String taskDate = datePart.split(" ")[0];
+                    if (taskDate.equals(dtf.format(now))) {
+                        int durationInSeconds = convertDurationToSeconds(durationPart);
+                        dailyTasks.put(taskPart, dailyTasks.getOrDefault(taskPart, 0) + durationInSeconds);
+                    }
+                }
+            }
+
+            if (dailyTasks.isEmpty()) {
+                content.append("No tasks recorded for today.");
+            } else {
+                for (Map.Entry<String, Integer> entry : dailyTasks.entrySet()) {
+                    content.append(entry.getKey()).append(": ").append(formatTime(entry.getValue())).append("\n");
+                }
+            }
+
+            JTextArea textArea = new JTextArea(content.toString());
+            textArea.setEditable(false);
+            JScrollPane scrollPane = new JScrollPane(textArea);
+            scrollPane.setPreferredSize(new Dimension(600, 200));
+            JOptionPane.showMessageDialog(null, scrollPane, "Daily Time Spent", JOptionPane.INFORMATION_MESSAGE);
+        } catch (IOException ex) {
+            JOptionPane.showMessageDialog(null, "No data found or unable to read the file.");
+        }
+    }
+
+    private static int convertDurationToSeconds(String duration) {
+        String[] durationParts = duration.split(", ");
+        int totalSeconds = 0;
+        for (String part : durationParts) {
+            part = part.trim();
+            if (part.endsWith("hours")) {
+                totalSeconds += Integer.parseInt(part.split(" ")[0]) * 3600;
+            } else if (part.endsWith("minutes")) {
+                totalSeconds += Integer.parseInt(part.split(" ")[0]) * 60;
+            } else if (part.endsWith("seconds")) {
+                totalSeconds += Integer.parseInt(part.split(" ")[0]);
+            }
+        }
+        return totalSeconds;
     }
 }
