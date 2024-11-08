@@ -3,3 +3,9 @@
 
 # Ignore the save file
 time_tracking_log.txt
+
+# Ignore the presets file
+presets.txt
+
+# Ignore the tasks file
+tasks.txt
